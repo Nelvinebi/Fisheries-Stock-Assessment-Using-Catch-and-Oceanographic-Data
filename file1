@@ -1,0 +1,71 @@
+import pandas as pd
+import numpy as np
+from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+def generate_synthetic_data(n=100, seed=42):
+    """Generate synthetic oceanographic and catch data."""
+    np.random.seed(seed)
+    temperature = np.random.uniform(10, 30, n)
+    salinity = np.random.uniform(30, 40, n)
+    chlorophyll = np.random.uniform(0.1, 5, n)
+    catch = 1000 + 20 * temperature - 10 * salinity + 15 * chlorophyll + np.random.normal(0, 50, n)
+
+    data = pd.DataFrame({
+        'Temperature': temperature,
+        'Salinity': salinity,
+        'Chlorophyll': chlorophyll,
+        'Catch': catch
+    })
+    return data
+
+
+def train_model(data):
+    """Train a linear regression model using oceanographic features."""
+    X = data[['Temperature', 'Salinity', 'Chlorophyll']]
+    y = data['Catch']
+    model = LinearRegression()
+    model.fit(X, y)
+    return model
+
+
+def evaluate_model(model, data):
+    """Evaluate the model and add predictions to the dataframe."""
+    X = data[['Temperature', 'Salinity', 'Chlorophyll']]
+    data['Predicted_Catch'] = model.predict(X)
+    return data
+
+
+def plot_results(data):
+    """Visualize actual vs predicted catch."""
+    plt.figure(figsize=(8, 6))
+    sns.scatterplot(x='Catch', y='Predicted_Catch', data=data, color='navy', alpha=0.7)
+    plt.plot([data['Catch'].min(), data['Catch'].max()],
+             [data['Catch'].min(), data['Catch'].max()],
+             'r--', label='Ideal Fit')
+    plt.title("Observed vs Predicted Catch")
+    plt.xlabel("Observed Catch")
+    plt.ylabel("Predicted Catch")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+
+def main():
+    # Step 1: Generate and save synthetic data
+    data = generate_synthetic_data()
+    data.to_csv("synthetic_data.csv", index=False)
+
+    # Step 2: Train model
+    model = train_model(data)
+
+    # Step 3: Evaluate and visualize
+    data = evaluate_model(model, data)
+    plot_results(data)
+
+
+if __name__ == "__main__":
+    main()
